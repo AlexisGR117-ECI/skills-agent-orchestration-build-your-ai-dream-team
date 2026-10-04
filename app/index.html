@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer>
+      "use strict";
+
+      const requiredFields = [
+        "name",
+        "owner",
+        "status",
+        "recentActivity",
+        "priority"
+      ];
+
+      function isValidProject(project) {
+        return project !== null &&
+          typeof project === "object" &&
+          requiredFields.every(
+            (field) => typeof project[field] === "string" && project[field].trim() !== ""
+          );
+      }
+
+      function semanticValue(value) {
+        return value
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "") || "unknown";
+      }
+
+      function createMetadataRow(label, value) {
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const description = document.createElement("dd");
+        description.textContent = value;
+        return [term, description];
+      }
+
+      function createProjectCard(project) {
+        const card = document.createElement("article");
+        card.className = "project-card";
+
+        const header = document.createElement("header");
+        header.className = "project-card-header";
+        const name = document.createElement("h3");
+        name.className = "project-name";
+        name.textContent = project.name;
+        const owner = document.createElement("p");
+        owner.className = "project-owner";
+        owner.textContent = project.owner;
+        header.append(name, owner);
+
+        const metadata = document.createElement("dl");
+        metadata.className = "project-metadata";
+
+        const statusTerm = document.createElement("dt");
+        statusTerm.textContent = "Status";
+        const statusDescription = document.createElement("dd");
+        const status = document.createElement("span");
+        status.className = "status-badge";
+        status.dataset.status = semanticValue(project.status);
+        status.textContent = project.status;
+        statusDescription.append(status);
+
+        const priorityTerm = document.createElement("dt");
+        priorityTerm.textContent = "Priority";
+        const priorityDescription = document.createElement("dd");
+        const priority = document.createElement("span");
+        priority.className = "priority-badge";
+        priority.dataset.priority = semanticValue(project.priority);
+        priority.textContent = project.priority;
+        priorityDescription.append(priority);
+
+        const [activityTerm, activityDescription] = createMetadataRow(
+          "Recent activity",
+          project.recentActivity
+        );
+        activityDescription.classList.add("recent-activity");
+
+        metadata.append(
+          statusTerm,
+          statusDescription,
+          priorityTerm,
+          priorityDescription,
+          activityTerm,
+          activityDescription
+        );
+        card.append(header, metadata);
+        return card;
+      }
+
+      function showMessage(message, role, className) {
+        const messageElement = document.createElement("p");
+        messageElement.setAttribute("role", role);
+        messageElement.className = className;
+        messageElement.textContent = message;
+        return messageElement;
+      }
+
+      async function loadProjects() {
+        const projectList = document.querySelector("[data-project-list]");
+        const feedback = document.querySelector("[data-feedback]");
+        projectList.setAttribute("aria-busy", "true");
+        feedback.replaceChildren(showMessage("Loading project data…", "status", "loading-state"));
+
+        try {
+          const response = await fetch("project-data.json", {
+            headers: { Accept: "application/json" }
+          });
+          if (!response.ok) {
+            throw new Error(`The server returned ${response.status}.`);
+          }
+
+          const data = await response.json();
+          if (data === null || typeof data !== "object" || !Array.isArray(data.projects)) {
+            throw new Error("The data does not contain a projects array.");
+          }
+
+          if (data.projects.length === 0) {
+            feedback.replaceChildren(
+              showMessage("No projects are available yet. Please check back later.", "status", "empty-state")
+            );
+            return;
+          }
+
+          const validProjects = data.projects.filter(isValidProject);
+          const invalidCount = data.projects.length - validProjects.length;
+          if (validProjects.length === 0) {
+            feedback.replaceChildren(
+              showMessage(
+                "Project data was found, but none of the project records are valid.",
+                "alert",
+                "error-state"
+              )
+            );
+            return;
+          }
+
+          projectList.replaceChildren(...validProjects.map(createProjectCard));
+          if (invalidCount > 0) {
+            feedback.replaceChildren(
+              showMessage(
+                `${invalidCount} invalid project record${invalidCount === 1 ? "" : "s"} could not be displayed.`,
+                "status",
+                "error-state"
+              )
+            );
+          } else {
+            feedback.replaceChildren();
+          }
+        } catch (error) {
+          projectList.replaceChildren();
+          feedback.replaceChildren(
+            showMessage(
+              `Unable to load project data. ${error.message} Please try again later.`,
+              "alert",
+              "error-state"
+            )
+          );
+        } finally {
+          projectList.setAttribute("aria-busy", "false");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadProjects);
+    </script>
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="dashboard-header">
+        <h1>Project Pulse</h1>
+        <p>Stay current on the projects moving our contributor community forward.</p>
+      </header>
+      <section aria-labelledby="projects-heading">
+        <h2 id="projects-heading">Current projects</h2>
+        <div data-feedback aria-live="polite"></div>
+        <div class="project-grid" data-project-list aria-live="polite" aria-busy="true"></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "projects": [
+    {
+      "name": "Contributor Onboarding Refresh",
+      "owner": "Maya Chen",
+      "status": "On Track",
+      "recentActivity": "Published the first-pass welcome guide and collected reviewer feedback.",
+      "priority": "High"
+    },
+    {
+      "name": "Accessibility Baseline",
+      "owner": "Jordan Patel",
+      "status": "In Progress",
+      "recentActivity": "Completed keyboard-navigation checks for the account settings flow.",
+      "priority": "Critical"
+    },
+    {
+      "name": "Community Metrics Digest",
+      "owner": "Sam Rivera",
+      "status": "Planning",
+      "recentActivity": "Confirmed the monthly reporting questions with the community team.",
+      "priority": "Medium"
+    },
+    {
+      "name": "Documentation Search Improvements",
+      "owner": "Avery Wilson",
+      "status": "At Risk",
+      "recentActivity": "Search relevance testing found gaps in older API reference content.",
+      "priority": "High"
+    },
+    {
+      "name": "Release Notes Archive",
+      "owner": "Taylor Brooks",
+      "status": "Complete",
+      "recentActivity": "Migrated the final release-note collection and verified public links.",
+      "priority": "Low"
+    }
+  ]
+}

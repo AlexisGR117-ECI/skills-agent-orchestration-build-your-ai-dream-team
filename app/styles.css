@@ -1,0 +1,427 @@
+/*
+ * Project Pulse visual system
+ * Stable rendering hooks: .dashboard, .project-card, .project-grid,
+ * .project-name, .project-owner, .project-status, .recent-activity,
+ * .project-priority, .status-badge, and .priority-badge.
+ */
+
+:root {
+  color-scheme: light;
+  --page-bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --ink: #172033;
+  --muted: #526174;
+  --faint: #6b7a90;
+  --border: #d8e0eb;
+  --border-strong: #b8c5d5;
+  --brand: #265fc5;
+  --brand-dark: #174799;
+  --focus: #f58a07;
+  --radius-card: 1rem;
+  --radius-badge: 999px;
+  --shadow-card: 0 0.25rem 0.75rem rgb(23 32 51 / 0.08),
+    0 1rem 2.25rem rgb(23 32 51 / 0.06);
+  --shadow-card-hover: 0 0.5rem 1rem rgb(23 32 51 / 0.12),
+    0 1.25rem 2.75rem rgb(23 32 51 / 0.1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 20rem;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  line-height: 1.5;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 20rem;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 8% -10%, #dceaff 0, transparent 31rem),
+    linear-gradient(180deg, #f9fbff 0, var(--page-bg) 23rem);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--brand-dark);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  color: #103778;
+}
+
+:focus-visible {
+  outline: 0.2rem solid var(--focus);
+  outline-offset: 0.2rem;
+}
+
+/* Supports either a .dashboard main element or a wrapper around it. */
+.dashboard {
+  width: min(100% - 2rem, 78rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3.5rem) 0 3.5rem;
+}
+
+.dashboard > header,
+.dashboard-header {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 48rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.dashboard h1 {
+  max-width: 16ch;
+  margin: 0;
+  color: #102544;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 780;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.dashboard > header p,
+.dashboard-header p,
+.dashboard-intro,
+.dashboard-summary {
+  max-width: 67ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+}
+
+.dashboard h2 {
+  margin: 0;
+  color: #1b2b45;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.project-grid,
+.dashboard [data-project-list],
+.dashboard .projects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.125rem;
+  min-height: 100%;
+  padding: clamp(1.25rem, 2.5vw, 1.5rem);
+  overflow-wrap: anywhere;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.project-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-0.125rem);
+}
+
+.project-card:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 0.2rem rgb(38 95 197 / 0.18), var(--shadow-card);
+}
+
+.project-card > header,
+.project-card-header {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.project-card h2,
+.project-card h3,
+.project-name {
+  margin: 0;
+  color: #142845;
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.018em;
+  line-height: 1.25;
+}
+
+.project-card h2 a,
+.project-card h3 a,
+.project-name a {
+  color: inherit;
+}
+
+.project-owner,
+.owner,
+.project-card [data-field="owner"] {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.project-owner::before,
+.owner::before {
+  color: var(--faint);
+  content: "Owner: ";
+  font-weight: 650;
+}
+
+/*
+ * A definition list is the preferred metadata structure. These rules also
+ * support independently rendered field elements from the static renderer.
+ */
+.project-card dl,
+.project-metadata {
+  display: grid;
+  grid-template-columns: minmax(5.75rem, auto) minmax(0, 1fr);
+  gap: 0.625rem 0.875rem;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.project-card dt,
+.metadata-label,
+.field-label {
+  color: var(--faint);
+  font-size: 0.8125rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-card dd,
+.metadata-value {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.9375rem;
+}
+
+.recent-activity,
+.project-card [data-field="recentActivity"] {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.recent-activity::before {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--faint);
+  content: "Recent activity";
+  font-size: 0.75rem;
+  font-weight: 720;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Badges always retain their readable status / priority text in the markup. */
+.status-badge,
+.priority-badge,
+.project-status,
+.project-priority,
+[data-status],
+[data-priority] {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.625rem;
+  color: #263850;
+  background: #edf1f6;
+  border: 1px solid #c8d2df;
+  border-radius: var(--radius-badge);
+  font-size: 0.8125rem;
+  font-weight: 720;
+  line-height: 1.25;
+}
+
+.status-badge::before,
+.project-status::before,
+[data-status]::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  background: currentColor;
+  border-radius: 50%;
+  content: "";
+}
+
+/* Status variants: class and data-attribute forms permit deterministic markup. */
+.status-active,
+.status-on-track,
+.status-in-progress,
+[data-status="active"],
+[data-status="on-track"],
+[data-status="in-progress"] {
+  color: #0a6139;
+  background: #e7f6ed;
+  border-color: #9ed5b4;
+}
+
+.status-planning,
+.status-pending,
+.status-not-started,
+[data-status="planning"],
+[data-status="pending"],
+[data-status="not-started"] {
+  color: #725000;
+  background: #fff5d9;
+  border-color: #edcf77;
+}
+
+.status-at-risk,
+.status-blocked,
+.status-paused,
+[data-status="at-risk"],
+[data-status="blocked"],
+[data-status="paused"] {
+  color: #a12622;
+  background: #fff0ee;
+  border-color: #efada8;
+}
+
+.status-complete,
+.status-completed,
+.status-done,
+[data-status="complete"],
+[data-status="completed"],
+[data-status="done"] {
+  color: #245994;
+  background: #eaf3ff;
+  border-color: #a9caee;
+}
+
+.priority-critical,
+.priority-high,
+[data-priority="critical"],
+[data-priority="high"] {
+  color: #8b211e;
+  background: #ffe9e7;
+  border-color: #eaa29d;
+}
+
+.priority-medium,
+[data-priority="medium"] {
+  color: #765000;
+  background: #fff4d4;
+  border-color: #e8c56b;
+}
+
+.priority-low,
+[data-priority="low"] {
+  color: #245781;
+  background: #e9f4fc;
+  border-color: #a9cee8;
+}
+
+/* Loading, empty, and error feedback supplied by the renderer. */
+.dashboard [role="status"],
+.dashboard [role="alert"],
+.dashboard .empty-state,
+.dashboard .error-state {
+  max-width: 46rem;
+  padding: 1rem 1.125rem;
+  color: #31445f;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 0.3rem solid var(--brand);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.25rem 0.75rem rgb(23 32 51 / 0.05);
+}
+
+.dashboard [role="alert"],
+.dashboard .error-state {
+  color: #7d2521;
+  background: #fff8f7;
+  border-color: #efb4af;
+  border-left-color: #bd3832;
+}
+
+@media (max-width: 30rem) {
+  .dashboard {
+    width: min(100% - 1.25rem, 78rem);
+    padding-top: 1.25rem;
+  }
+
+  .project-card {
+    padding: 1.125rem;
+  }
+
+  .project-card dl,
+  .project-metadata {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .project-card dd,
+  .metadata-value {
+    margin-bottom: 0.625rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .project-grid,
+  .dashboard [data-project-list],
+  .dashboard .projects {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .project-card:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --border: #718096;
+    --muted: #334155;
+  }
+
+  .project-card,
+  .status-badge,
+  .priority-badge,
+  .project-status,
+  .project-priority {
+    border-width: 2px;
+  }
+}
